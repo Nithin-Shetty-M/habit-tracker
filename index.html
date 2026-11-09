@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Daily Habit Tracker</title>
+  
+  <!-- Android & Mobile PWA Configuration -->
+  <meta name="theme-color" content="#10b981">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2310b981'/%3E%3Cpath d='M30 52 L44 66 L72 36' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjogIkRhaWx5IEhhYml0IFRyYWNrZXIiLCAic2hvcnRfbmFtZSI6ICJIYWJpdHMiLCAiZGVzY3JpcHRpb24iOiAiVHJhY2sgeW91ciBkYWlseSBoYWJpdHMgYW5kIG1vbWVudHVtLiIsICJzdGFydF91cmwiOiAiLiIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dyb3VuZF9jb2xvciI6ICIjZjhmYWZjIiwgInRoZW1lX2NvbG9yIjogIiMxMGI5ODEiLCAiaWNvbnMiOiBbeyJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIHJ4PScyNCcgZmlsbD0nJTIzMTBiOTgxJy8lM0UlM0NwYXRoIGQ9J00zMCA1MiBMNDQgNjYgTDcyIDM2JyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzEwJyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnIGZpbGw9J25vbmUnLyUzRSUzQy9zdmclM0UiLCAic2l6ZXMiOiAiMTkyeDE5MiA1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIsICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSJ9XX0=">
+
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between p-4 sm:p-6 sm:items-center sm:justify-center relative">
+  <!-- Toast Notification Alert -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 -translate-y-2 w-11/12 max-w-sm">
+    <div class="bg-slate-900/95 backdrop-blur-md text-white text-xs px-4 py-3 rounded-2xl shadow-xl border border-slate-700/50 flex items-center gap-3">
+      <span class="text-base">🔔</span>
+      <div class="flex-1">
+        <p class="font-semibold text-slate-100" id="toast-title">Daily Habit Reminder</p>
+        <p class="text-slate-300 text-[11px]" id="toast-body">Don't break your momentum! Check off today's habits.</p>
+      </div>
+    </div>
+  </div>
+
+  <main class="w-full max-w-md bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8">
+    <!-- App Bar Header -->
+    <header class="mb-5">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold text-sm shadow-sm shadow-emerald-200">
+            ✓
+          </div>
+          <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Habit Tracker</h1>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200/80 rounded-full text-amber-700 text-xs font-semibold shadow-xs">
+            <span>🔥</span>
+            <span id="streak-badge">0 Day Streak</span>
+          </div>
+        </div>
+      </div>
+      <p class="text-sm text-slate-500">Track your daily momentum, one habit at a time.</p>
+    </header>
+
+    <!-- Reminder Notification Bar -->
+    <section class="bg-slate-50 border border-slate-200/70 rounded-2xl p-3.5 mb-5 flex items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2.5 text-slate-700 font-medium">
+        <span class="text-base">⏰</span>
+        <div>
+          <span class="block text-slate-900 font-semibold">Daily Reminder</span>
+          <span class="text-[11px] text-slate-500" id="reminder-status-desc">Alerts at 8:00 PM</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button 
+          id="test-notif-btn" 
+          type="button"
+          class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-100/70 text-slate-700 font-medium transition active:scale-95"
+          title="Test notification alert"
+        >
+          Test Alert
+        </button>
+        <button 
+          id="toggle-reminder-btn" 
+          type="button"
+          class="px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 font-semibold transition active:scale-95"
+        >
+          Enabled
+        </button>
+      </div>
+    </section>
+
+    <!-- Progress Card -->
+    <section class="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-5">
+      <div class="flex justify-between items-center text-sm font-medium mb-2">
+        <span class="text-slate-600">Today's Progress</span>
+        <span id="progress-text" class="text-slate-900 font-semibold">0 of 0 (0%)</span>
+      </div>
+      <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+        <div id="progress-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+      </div>
+
+      <!-- Completion Banner (visible when 100% complete) -->
+      <div id="completion-banner" class="hidden mt-3 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs text-emerald-800 font-medium">
+        <span class="flex items-center gap-1.5">
+          <span>🎉</span>
+          <span>All habits complete for today!</span>
+        </span>
+        <button 
+          id="reset-day-btn" 
+          type="button" 
+          class="text-slate-500 hover:text-emerald-700 underline underline-offset-2 transition"
+        >
+          Reset for Tomorrow
+        </button>
+      </div>
+    </section>
+
+    <!-- Add Habit Form -->
+    <form id="add-habit-form" class="flex gap-2 mb-6">
+      <input 
+        id="habit-input" 
+        type="text" 
+        placeholder="Add a new habit..." 
+        autocomplete="off"
+        class="flex-1 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+      >
+      <button 
+        type="submit" 
+        id="add-habit-btn"
+        class="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-medium text-sm transition shadow-sm shadow-emerald-200 flex items-center gap-1.5"
+      >
+        <span>+</span>
+        <span>Add</span>
+      </button>
+    </form>
+
+    <!-- Habits List Container -->
+    <section class="space-y-3 mb-6" id="habit-list">
+      <!-- Habit items are rendered dynamically from storage -->
+    </section>
+
+    <!-- Android Install Helper Info -->
+    <footer class="pt-4 border-t border-slate-100">
+      <div class="flex items-start gap-3 p-3 bg-emerald-50/60 rounded-xl border border-emerald-100 text-xs text-emerald-900">
+        <span class="text-base leading-none">📱</span>
+        <div>
+          <span class="font-semibold block mb-0.5">Android Ready & Notifications:</span>
+          <span>Includes native Notification API and in-app alerts. Open in Chrome to install.</span>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'habit_tracker_data_v1';
+    const STREAK_KEY = 'habit_tracker_streak_v1';
+    const NOTIF_KEY = 'habit_tracker_notif_v1';
+    
+    const habitList = document.getElementById('habit-list');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const addForm = document.getElementById('add-habit-form');
+    const habitInput = document.getElementById('habit-input');
+    const streakBadge = document.getElementById('streak-badge');
+    const completionBanner = document.getElementById('completion-banner');
+    const resetDayBtn = document.getElementById('reset-day-btn');
+    
+    // Notification elements
+    const toggleReminderBtn = document.getElementById('toggle-reminder-btn');
+    const testNotifBtn = document.getElementById('test-notif-btn');
+    const reminderDesc = document.getElementById('reminder-status-desc');
+    const toast = document.getElementById('toast');
+    const toastTitle = document.getElementById('toast-title');
+    const toastBody = document.getElementById('toast-body');
+
+    // Default starter habits for new users
+    const DEFAULT_HABITS = [
+      { id: 'h1', name: 'Drink 8 glasses of water', completed: false },
+      { id: 'h2', name: 'Read 15 pages of a book', completed: false },
+      { id: 'h3', name: 'Go for a 20-minute walk', completed: false }
+    ];
+
+    // Load habits
+    function loadHabits() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {
+        console.warn('Could not read localStorage:', e);
+      }
+      return DEFAULT_HABITS;
+    }
+
+    // Save habits
+    function saveHabits() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+      } catch (e) {
+        console.warn('Could not write to localStorage:', e);
+      }
+    }
+
+    // Load streak data
+    function loadStreak() {
+      try {
+        const saved = localStorage.getItem(STREAK_KEY);
+        if (saved) {
+          return JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Could not read streak:', e);
+      }
+      return { count: 0, lastDate: null };
+    }
+
+    // Save streak data
+    function saveStreak(data) {
+      try {
+        localStorage.setItem(STREAK_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn('Could not write streak:', e);
+      }
+    }
+
+    // Load notification settings
+    function loadNotifSettings() {
+      try {
+        const saved = localStorage.getItem(NOTIF_KEY);
+        if (saved) {
+          return JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Could not read notif settings:', e);
+      }
+      return { enabled: true, time: '20:00' };
+    }
+
+    function saveNotifSettings(data) {
+      try {
+        localStorage.setItem(NOTIF_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn('Could not write notif settings:', e);
+      }
+    }
+
+    let habits = loadHabits();
+    let streak = loadStreak();
+    let notifSettings = loadNotifSettings();
+    let toastTimeout = null;
+
+    // Toast banner display
+    function showToast(title, message) {
+      toastTitle.textContent = title;
+      toastBody.textContent = message;
+      toast.classList.remove('opacity-0', '-translate-y-2');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', '-translate-y-2');
+      }, 4000);
+    }
+
+    // Send notification (native Android Notification API + in-app toast fallback)
+    function triggerNotification(title, message) {
+      // 1. Show in-app banner
+      showToast(title, message);
+
+      // 2. Request / fire browser/Android system notification
+      try {
+        if ('Notification' in window) {
+          if (Notification.permission === 'granted') {
+            new Notification(title, {
+              body: message,
+              icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2310b981'/%3E%3Cpath d='M30 52 L44 66 L72 36' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E"
+            });
+          } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then((permission) => {
+              if (permission === 'granted') {
+                new Notification(title, { body: message });
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('System notifications not permitted in this context:', e);
+      }
+    }
+
+    function updateReminderUI() {
+      if (notifSettings.enabled) {
+        toggleReminderBtn.textContent = 'Enabled';
+        toggleReminderBtn.className = 'px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 font-semibold transition active:scale-95';
+        reminderDesc.textContent = 'Alerts at 8:00 PM';
+      } else {
+        toggleReminderBtn.textContent = 'Disabled';
+        toggleReminderBtn.className = 'px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-500 font-medium transition active:scale-95';
+        reminderDesc.textContent = 'Reminders are paused';
+      }
+    }
+
+    toggleReminderBtn.addEventListener('click', () => {
+      notifSettings.enabled = !notifSettings.enabled;
+      saveNotifSettings(notifSettings);
+      updateReminderUI();
+      
+      if (notifSettings.enabled) {
+        triggerNotification('Habit Reminders On', 'You will receive reminders to check off your habits.');
+      } else {
+        showToast('Reminders Paused', 'Daily reminders have been disabled.');
+      }
+    });
+
+    testNotifBtn.addEventListener('click', () => {
+      const pendingCount = habits.filter(h => !h.completed).length;
+      if (pendingCount > 0) {
+        triggerNotification('⏰ Daily Habit Reminder', `You have ${pendingCount} habit${pendingCount > 1 ? 's' : ''} left to complete today!`);
+      } else {
+        triggerNotification('🌟 Great Job!', 'All your habits are already checked off for today!');
+      }
+    });
+
+    function updateStreakDisplay() {
+      const suffix = streak.count === 1 ? 'Day' : 'Days';
+      streakBadge.textContent = `${streak.count} ${suffix} Streak`;
+    }
+
+    function checkStreakCompletion() {
+      const total = habits.length;
+      if (total === 0) return;
+
+      const allCompleted = habits.every(h => h.completed);
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (allCompleted) {
+        completionBanner.classList.remove('hidden');
+
+        // If today hasn't been credited yet, increment streak and celebrate!
+        if (streak.lastDate !== today) {
+          streak.count += 1;
+          streak.lastDate = today;
+          saveStreak(streak);
+          updateStreakDisplay();
+          launchConfetti();
+          triggerNotification('🎉 Milestone Reached!', 'Congratulations, you finished all habits and leveled up your streak!');
+        }
+      } else {
+        completionBanner.classList.add('hidden');
+      }
+    }
+
+    function launchConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.7 }
+        });
+      }
+    }
+
+    function renderHabits() {
+      habitList.innerHTML = '';
+
+      if (habits.length === 0) {
+        habitList.innerHTML = `
+          <div class="text-center py-8 text-slate-400 text-sm">
+            <span class="text-2xl block mb-1">🌱</span>
+            No habits yet. Add your first goal above!
+          </div>
+        `;
+        updateProgress();
+        checkStreakCompletion();
+        return;
+      }
+
+      habits.forEach((habit) => {
+        const item = document.createElement('div');
+        item.className = `habit-item flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl border transition select-none ${
+          habit.completed 
+            ? 'bg-slate-50 border-slate-200' 
+            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+        }`;
+        item.dataset.id = habit.id;
+
+        item.innerHTML = `
+          <label class="flex items-center gap-3.5 flex-1 cursor-pointer">
+            <input 
+              type="checkbox" 
+              class="habit-checkbox w-5 h-5 text-emerald-600 rounded-md border-slate-300 focus:ring-emerald-500 cursor-pointer"
+              ${habit.completed ? 'checked' : ''}
+            >
+            <span class="habit-name font-medium transition ${
+              habit.completed ? 'line-through text-slate-400' : 'text-slate-700'
+            }">${escapeHtml(habit.name)}</span>
+          </label>
+          <button 
+            type="button" 
+            class="delete-habit-btn p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 active:scale-95 transition"
+            title="Delete habit"
+            aria-label="Delete ${escapeHtml(habit.name)}"
+          >
+            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        `;
+
+        habitList.appendChild(item);
+      });
+
+      updateProgress();
+      checkStreakCompletion();
+    }
+
+    function updateProgress() {
+      const total = habits.length;
+      const completed = habits.filter(h => h.completed).length;
+      const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+      progressBar.style.width = percentage + '%';
+      progressText.textContent = `${completed} of ${total} (${percentage}%)`;
+    }
+
+    // Toggle habit checkbox
+    habitList.addEventListener('change', (e) => {
+      if (e.target.classList.contains('habit-checkbox')) {
+        const item = e.target.closest('.habit-item');
+        const habitId = item.dataset.id;
+        const habit = habits.find(h => h.id === habitId);
+        if (habit) {
+          habit.completed = e.target.checked;
+          saveHabits();
+          renderHabits();
+        }
+      }
+    });
+
+    // Delete habit button
+    habitList.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('.delete-habit-btn');
+      if (deleteBtn) {
+        const item = deleteBtn.closest('.habit-item');
+        const habitId = item.dataset.id;
+        habits = habits.filter(h => h.id !== habitId);
+        saveHabits();
+        renderHabits();
+      }
+    });
+
+    // Add new habit
+    addForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = habitInput.value.trim();
+      if (!text) return;
+
+      const newHabit = {
+        id: 'h_' + Date.now(),
+        name: text,
+        completed: false
+      };
+
+      habits.push(newHabit);
+      saveHabits();
+      renderHabits();
+
+      habitInput.value = '';
+      habitInput.focus();
+    });
+
+    // Reset for tomorrow (keeps streak and habit names, unchecks all items)
+    resetDayBtn.addEventListener('click', () => {
+      habits.forEach(h => { h.completed = false; });
+      saveHabits();
+      renderHabits();
+    });
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Initial setup
+    updateStreakDisplay();
+    updateReminderUI();
+    renderHabits();
+  </script>
+</body>
+</html>
